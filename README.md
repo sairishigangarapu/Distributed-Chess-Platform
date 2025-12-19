@@ -274,8 +274,7 @@ Before you begin, make sure you have:
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/sairishigangarapu/Super_Chess.git
-cd Super_Chess
+git clone https://github.com/sairishigangarapu/Distributed-Chess-Platform.gitcd Super_Chess
 ```
 
 ### 2️⃣ Install Dependencies
