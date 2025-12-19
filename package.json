@@ -1,4 +1,32 @@
 {
+  "name": "super-chess",
+  "version": "2.0.0",
+  "description": "Real-time multiplayer chess platform with live chat and spectator mode",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "start:legacy": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chess",
+    "multiplayer",
+    "real-time",
+    "socket.io",
+    "mern",
+    "express",
+    "mongodb"
+  ],
+  "author": "Sai Rishi Gangarapu",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sairishigangarapu/Super_Chess.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "chess.js": "^1.2.0",
@@ -8,8 +36,11 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
-    "mongoose-encryption": "^2.1.2",
     "multer": "^1.4.5-lts.2",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "cors": "^2.8.5",
+    "nodemon": "^3.1.11"
   }
 }
