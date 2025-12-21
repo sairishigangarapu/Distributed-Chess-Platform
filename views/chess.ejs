@@ -54,6 +54,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
         window.USER_ID = "<%= user._id %>";
+        window.IS_SPECTATOR = <%= isSpectator ? 'true' : 'false' %>;
+        window.GAME_ID = "<%= typeof gameId !== 'undefined' ? gameId : '' %>";
     </script>
     <script src="/js/chessgame.js" defer></script>
 </body>

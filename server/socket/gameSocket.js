@@ -21,7 +21,7 @@ module.exports = (io, socket, gameManager) => {
             // Create player object
             const player = {
                 socketId: socket.id,
-                oderId: oderId,
+                userId: userId,
                 username: user.username
             };
 
@@ -38,7 +38,7 @@ module.exports = (io, socket, gameManager) => {
             // Join the socket room for this game
             socket.join(game.id);
             socket.gameId = game.id;
-            socket.userId = oderId;
+            socket.userId = userId;
 
             // Emit role to the joining player
             if (result.role === 'spectator') {
@@ -86,7 +86,7 @@ module.exports = (io, socket, gameManager) => {
                 return;
             }
 
-            const result = gameManager.makeMove(gameId, oderId, move);
+            const result = gameManager.makeMove(gameId, userId, move);
 
             if (!result.success) {
                 socket.emit('invalidMove', { message: result.error });
@@ -106,10 +106,10 @@ module.exports = (io, socket, gameManager) => {
                 if (result.status.result === 'checkmate') {
                     const winner = result.status.winner === 'White' ? game.white : game.black;
                     const loser = result.status.winner === 'White' ? game.black : game.white;
-                    await updateGameStats(winner?.oderId, loser?.oderId);
+                    await updateGameStats(winner?.userId, loser?.userId);
                 } else {
                     // Draw
-                    await updateGameStats(game.white?.oderId, game.black?.oderId, true);
+                    await updateGameStats(game.white?.userId, game.black?.userId, true);
                 }
 
                 io.to(gameId).emit('gameOver', result.status.message);
@@ -139,12 +139,12 @@ module.exports = (io, socket, gameManager) => {
             const game = gameManager.getGame(gameId);
             if (!game) return;
 
-            const isWhite = game.white?.oderId === oderId;
+            const isWhite = game.white?.userId === userId;
             const winner = isWhite ? game.black : game.white;
             const loser = isWhite ? game.white : game.black;
             const winnerColor = isWhite ? 'Black' : 'White';
 
-            await updateGameStats(winner?.oderId, loser?.oderId);
+            await updateGameStats(winner?.userId, loser?.userId);
 
             io.to(gameId).emit('gameStatus', `${winnerColor} wins by resignation!`);
             io.to(gameId).emit('gameOver', `${winnerColor} wins by resignation!`);
@@ -168,7 +168,7 @@ module.exports = (io, socket, gameManager) => {
 
             if (result.gameEnded && result.gameId) {
                 // Update stats: winner gets the win, disconnected player gets a loss
-                await updateGameStats(result.winner?.oderId, result.loser?.oderId);
+                await updateGameStats(result.winner?.userId, result.loser?.userId);
 
                 const winnerColor = result.winner === result.winner ? 
                     (gameManager.getGame(result.gameId)?.white === result.winner ? 'White' : 'Black') : 'Unknown';

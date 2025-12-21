@@ -8,10 +8,10 @@ module.exports = (io, socket, chatService) => {
     /**
      * Handle sending a message
      */
-    socket.on('sendMessage', async ({ oderId, message }) => {
+    socket.on('sendMessage', async ({ userId, message }) => {
         try {
             // Validate user
-            const user = await User.findById(oderId).select('username profilepic');
+            const user = await User.findById(userId).select('username profilepic');
             if (!user) {
                 socket.emit('chatError', 'User not found. Please log in again.');
                 return;
@@ -55,9 +55,9 @@ module.exports = (io, socket, chatService) => {
     /**
      * Handle sending a message to a specific game room
      */
-    socket.on('sendGameMessage', async ({ oderId, message, gameId }) => {
+    socket.on('sendGameMessage', async ({ userId, message, gameId }) => {
         try {
-            const user = await User.findById(oderId).select('username');
+            const user = await User.findById(userId).select('username');
             if (!user) {
                 socket.emit('chatError', 'User not found.');
                 return;

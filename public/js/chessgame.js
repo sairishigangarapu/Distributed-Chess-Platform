@@ -2,7 +2,13 @@ const socket = io('http://localhost:3000'); // Explicit URL for clarity
 socket.on('connect', () => {
     console.log('Connected to Socket.IO server');
 });
-socket.emit('joinGame', { userId: window.USER_ID });
+
+// Join game with gameId if spectating, otherwise matchmaking
+const joinPayload = { userId: window.USER_ID };
+if (window.IS_SPECTATOR && window.GAME_ID) {
+    joinPayload.gameId = window.GAME_ID;
+}
+socket.emit('joinGame', joinPayload);
 
 const chess = new Chess();
 const boardElement = document.querySelector('.chessboard');
@@ -10,6 +16,7 @@ const boardElement = document.querySelector('.chessboard');
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
+let isSpectator = window.IS_SPECTATOR || false;
 
 const renderBoard = () => {
     const board = chess.board();
@@ -91,12 +98,14 @@ const getPieceUnicode = (piece) => {
 
 socket.on('playerRole', (role) => {
     playerRole = role;
+    isSpectator = false;
     console.log('Player role assigned:', playerRole); // Debug
     renderBoard();
 });
 
 socket.on('spectatorRole', () => {
     playerRole = null;
+    isSpectator = true;
     console.log('Assigned as spectator'); // Debug
     renderBoard();
 });

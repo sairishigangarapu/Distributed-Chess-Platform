@@ -7,7 +7,7 @@ const { Chess } = require('chess.js');
 class GameManager {
     constructor() {
         this.games = new Map(); // gameId -> GameState
-        this.playerToGame = new Map(); // oderId -> gameId (for quick lookup)
+        this.playerToGame = new Map(); // userId -> gameId (for quick lookup)
         this.waitingPlayer = null; // Player waiting for an opponent
     }
 
@@ -27,7 +27,7 @@ class GameManager {
         };
 
         this.games.set(gameId, game);
-        this.playerToGame.set(player.oderId, gameId);
+        this.playerToGame.set(player.userId, gameId);
         
         return game;
     }
@@ -68,8 +68,21 @@ class GameManager {
 
         // Matchmaking: pair with waiting player or wait
         if (this.waitingPlayer && this.waitingPlayer.userId !== player.userId) {
-            // Create game with waiting player as white
-            const game = this.createGame(this.waitingPlayer);
+            // Find the waiting player's existing game
+            const waitingGameId = this.playerToGame.get(this.waitingPlayer.userId);
+            const game = this.games.get(waitingGameId);
+            
+            if (!game) {
+                // Fallback: create new game if something went wrong
+                const newGame = this.createGame(this.waitingPlayer);
+                newGame.black = player;
+                newGame.status = 'active';
+                this.playerToGame.set(player.userId, newGame.id);
+                this.waitingPlayer = null;
+                return { success: true, game: newGame, role: 'b', gameStarted: true };
+            }
+            
+            // Add second player to existing game
             game.black = player;
             game.status = 'active';
             this.playerToGame.set(player.userId, game.id);
@@ -282,9 +295,9 @@ class GameManager {
     /**
      * Get player's role in a game
      */
-    _getPlayerRole(game, oderId) {
-        if (game.white?.oderId === oderId) return 'w';
-        if (game.black?.oderId === oderId) return 'b';
+    _getPlayerRole(game, userId) {
+        if (game.white?.userId === userId) return 'w';
+        if (game.black?.userId === userId) return 'b';
         return 'spectator';
     }
 
