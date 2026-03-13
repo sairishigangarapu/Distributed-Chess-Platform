@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .chessboard {
@@ -13,50 +16,118 @@
             width: 400px;
             height: 400px;
             transform: rotate(0deg);
-            pointer-events: auto; /* Ensure board allows interaction */
+            pointer-events: auto;
+            /* Ensure board allows interaction */
         }
-        .piece.white { color: white; filter: drop-shadow(0 0 2px rgba(0, 0, 0, 1)); }
-        .piece.black { color: black; }
-        .flipped { transform: rotate(180deg); }
-        .square { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .square.light { background-color: #f0d9b5; }
-        .square.dark { background-color: #b58863; }
+
+        .piece.white {
+            color: white;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 1));
+        }
+
+        .piece.black {
+            color: black;
+        }
+
+        .flipped {
+            transform: rotate(180deg);
+        }
+
+        .square {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .square.light {
+            background-color: #f0d9b5;
+        }
+
+        .square.dark {
+            background-color: #b58863;
+        }
+
         .piece {
             font-size: 36px;
             cursor: pointer;
-            pointer-events: auto; /* Ensure pieces are interactive */
-            user-select: none; /* Prevent text selection during drag */
+            pointer-events: auto;
+            /* Ensure pieces are interactive */
+            user-select: none;
+            /* Prevent text selection during drag */
         }
-        .piece.draggable { cursor: grab; }
-        .dragging { opacity: 0.5; }
-        .flipped .piece { transform: rotate(180deg); }
+
+        .piece.draggable {
+            cursor: grab;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .flipped .piece {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
+
 <body class="bg-zinc-900 text-white">
     <div class="min-h-screen flex flex-col items-center justify-center p-10">
         <div class="flex items-center gap-4 mb-6">
             <div class="w-12 h-12 rounded-full overflow-hidden">
-                <% if (user.profilepic && user.profilepic !== 'default.png') { %>
-                    <img src="/images/uploads/<%= user.profilepic %>" alt="Profile Picture" class="w-full h-full object-cover">
-                <% } else { %>
-                    <div class="w-full h-full bg-blue-500 flex items-center justify-center">
-                        <%= user.username.charAt(0).toUpperCase() %>
-                    </div>
-                <% } %>
+                <% if (user.profilepic && user.profilepic !=='default.png' ) { %>
+                    <img src="/images/uploads/<%= user.profilepic %>" alt="Profile Picture"
+                        class="w-full h-full object-cover">
+                    <% } else { %>
+                        <div class="w-full h-full bg-blue-500 flex items-center justify-center">
+                            <%= user.username.charAt(0).toUpperCase() %>
+                        </div>
+                        <% } %>
             </div>
-            <h2 class="text-2xl font-semibold"><%= user.username %></h2>
+            <h2 class="text-2xl font-semibold">
+                <%= user.username %>
+            </h2>
         </div>
         <div id="gameStatus" class="text-xl mb-6"></div>
-        <div class="chessboard h-96 w-96"></div>
-        <a href="/dashboard" class="mt-6 text-blue-400 hover:text-blue-300">Back to Dashboard</a>
+        <div class="flex gap-8 items-start">
+            <div class="chessboard h-96 w-96"></div>
+
+            <!-- Spectator Chat Section (Hidden by default) -->
+            <div id="spectatorChatContainer"
+                class="hidden flex-col w-80 h-96 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700">
+                <div
+                    class="bg-zinc-700 p-3 rounded-t-lg font-semibold border-b border-zinc-600 text-sm flex justify-between items-center">
+                    <span>Spectator Chat</span>
+                    <span class="text-xs text-zinc-400">Players cannot see this</span>
+                </div>
+                <div id="spectatorMessages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-2 text-sm">
+                    <!-- Messages will appear here -->
+                </div>
+                <div class="p-3 bg-zinc-700 rounded-b-lg border-t border-zinc-600 flex gap-2">
+                    <input type="text" id="spectatorMessageInput" placeholder="Type a message..."
+                        class="flex-1 bg-zinc-900 border border-zinc-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 text-sm">
+                    <button id="sendSpectatorMessageBtn"
+                        class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded font-medium transition-colors text-sm">Send</button>
+                </div>
+            </div>
+        </div>
+        <a href="/dashboard"
+            class="mt-8 relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800">
+            <span
+                class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                Back to Dashboard
+            </span>
+        </a>
     </div>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
         window.USER_ID = "<%= user._id %>";
-        window.IS_SPECTATOR = <%= isSpectator ? 'true' : 'false' %>;
+        window.IS_SPECTATOR = "<%= isSpectator ? 'true' : 'false' %>";
         window.GAME_ID = "<%= typeof gameId !== 'undefined' ? gameId : '' %>";
     </script>
     <script src="/js/chessgame.js" defer></script>
 </body>
+
 </html>

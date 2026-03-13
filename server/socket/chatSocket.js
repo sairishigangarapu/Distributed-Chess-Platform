@@ -86,6 +86,39 @@ module.exports = (io, socket, chatService) => {
     });
 
     /**
+     * Handle sending a message to a specific game's spectator room
+     */
+    socket.on('sendSpectatorMessage', async ({ userId, message, gameId }) => {
+        try {
+            const user = await User.findById(userId).select('username');
+            if (!user) {
+                socket.emit('chatError', 'User not found.');
+                return;
+            }
+
+            if (!message || message.trim().length === 0) {
+                return;
+            }
+
+            const { isClean, cleanMessage } = chatService.filterMessage(message);
+
+            if (!isClean) {
+                socket.emit('chatError', 'Please keep the chat friendly.');
+                return;
+            }
+
+            const chatMessage = chatService.formatMessage(user, cleanMessage);
+
+            // Send only to the spectator room
+            io.to(`${gameId}-spectators`).emit('receiveSpectatorMessage', chatMessage);
+
+        } catch (error) {
+            console.error('Error sending spectator message:', error);
+            socket.emit('chatError', 'Failed to send message.');
+        }
+    });
+
+    /**
      * Handle typing indicator
      */
     socket.on('typing', ({ username, gameId }) => {

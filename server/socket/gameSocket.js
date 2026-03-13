@@ -42,6 +42,7 @@ module.exports = (io, socket, gameManager) => {
 
             // Emit role to the joining player
             if (result.role === 'spectator') {
+                socket.join(`${game.id}-spectators`); // Spectators join an additional room
                 socket.emit('spectatorRole');
             } else {
                 socket.emit('playerRole', result.role);

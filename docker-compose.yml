@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/chessgame
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-key-change-in-production-immediately
+      - JWT_EXPIRES_IN=24h
+      - CLIENT_URL=http://localhost:3000
+      - MAX_FILE_SIZE=5242880
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6-jammy
+    ports:
+      - "27017:27017" # Exposing port so you can access it via local GUI clients if needed
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379" # Exposing port so you can access it via local GUI clients if needed
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:

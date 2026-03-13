@@ -108,6 +108,13 @@ socket.on('spectatorRole', () => {
     isSpectator = true;
     console.log('Assigned as spectator'); // Debug
     renderBoard();
+    
+    // Show spectator chat when assigned spectator role
+    const chatContainer = document.getElementById('spectatorChatContainer');
+    if (chatContainer) {
+        chatContainer.classList.remove('hidden');
+        chatContainer.classList.add('flex');
+    }
 });
 
 socket.on('boardState', (fen) => {
@@ -148,5 +155,50 @@ socket.on('gameReset', () => {
     renderBoard();
     document.getElementById('gameStatus').innerText = 'Waiting for players...';
 });
+
+// Spectator Chat Logic
+const specMsgInput = document.getElementById('spectatorMessageInput');
+const sendSpecMsgBtn = document.getElementById('sendSpectatorMessageBtn');
+const specMessagesContainer = document.getElementById('spectatorMessages');
+
+if (specMsgInput && sendSpecMsgBtn && specMessagesContainer) {
+    const sendSpectatorMessage = () => {
+        const message = specMsgInput.value.trim();
+        if (message && window.GAME_ID) {
+            socket.emit('sendSpectatorMessage', {
+                userId: window.USER_ID,
+                message: message,
+                gameId: window.GAME_ID
+            });
+            specMsgInput.value = '';
+        }
+    };
+
+    sendSpecMsgBtn.addEventListener('click', sendSpectatorMessage);
+    
+    specMsgInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendSpectatorMessage();
+        }
+    });
+
+    socket.on('receiveSpectatorMessage', (data) => {
+        const msgElement = document.createElement('div');
+        msgElement.className = 'bg-zinc-700/50 p-2 rounded';
+        
+        const timestamp = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        msgElement.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-blue-400">${data.user.username}</span>
+                <span class="text-xs text-zinc-500">${timestamp}</span>
+            </div>
+            <div class="text-zinc-300 break-words">${data.message}</div>
+        `;
+        
+        specMessagesContainer.appendChild(msgElement);
+        specMessagesContainer.scrollTop = specMessagesContainer.scrollHeight;
+    });
+}
 
 renderBoard();

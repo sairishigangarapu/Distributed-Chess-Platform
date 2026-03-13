@@ -2,6 +2,8 @@ const GameManager = require('../services/GameManager');
 const ChatService = require('../services/ChatService');
 const gameSocketHandler = require('./gameSocket');
 const chatSocketHandler = require('./chatSocket');
+const { createClient } = require('redis');
+const { createAdapter } = require('@socket.io/redis-adapter');
 
 /**
  * Main Socket Handler
@@ -14,6 +16,18 @@ const initializeSocket = (io, app) => {
 
     // Make gameManager available to routes (for spectate list)
     app.set('gameManager', gameManager);
+
+    // Initialize Redis Pub/Sub adapter
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const pubClient = createClient({ url: redisUrl });
+    const subClient = pubClient.duplicate();
+
+    Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log(`Socket.IO Redis Adapter initialized (${redisUrl})`);
+    }).catch(err => {
+        console.error('Failed to initialize Redis Adapter:', err);
+    });
 
     // Connection handler
     io.on('connection', (socket) => {
